@@ -22,21 +22,24 @@ function popularPerguntaSecreta() {
 
             $(data.Array).each(function () {
                 hasItens = true;
-                $('#ulPerguntaSecreta').append("<li id='" + this.Id + "'><a href='#'>" + this.DsPerguntaSecreta + "</a></li>");
+                $('#ulPerguntaSecreta').append("<li id='" + this.Id + "'><a href='javascript:void(0);'>" + this.DsPerguntaSecreta + "</a></li>");
             });
 
             if (hasItens)
                 $("#ulPerguntaSecreta li a").click(function () { $('#txtPerguntaSecreta').val($(this).text()); $('#txtRespostaSecreta').focus(); });
         },
         error: function (xmlHttpRequest) {
-            mostrarMsgErro(eval("(" + xmlHttpRequest.responseText + ")").Message);
+            var erro = eval("(" + xmlHttpRequest.responseText + ")");
+            mostrarMsgErro(ParseIsNullOrEmpty(erro) ? 'Erro!' : erro.Message);
         }
     });
 }
 
 function limparCadastro() {
     $('#txtNome').val('');
+    $('#txtCpf').val('');
     $('#txtEmail').val('');
+    $('#txtConfirmarEmail').val('');
     $('#txtSenha1').val('');
     $('#txtSenha2').val('');
     $('#txtPerguntaSecreta').val('');
@@ -54,13 +57,47 @@ function validarCadastro() {
     } else
         $('#txtNome').parent().parent().removeClass('has-warning');
 
-    if ($('#txtEmail').val().trim() == '' || !IsValidEmail($('#txtEmail').val().trim())) {
+    if ($('#txtCpf').val().trim() == '' || !validarCpf($('#txtCpf').val().trim())) {
+        $('#txtCpf').parent().parent().addClass('has-warning');
+        if (formularioValido)
+            $('#txtCpf').focus();
+        formularioValido = false;
+
+        if ($('#txtCpf').val().trim() != '')
+            mostrarMsgAlerta('Cpf inválido!');
+    } else
+        $('#txtCpf').parent().parent().removeClass('has-warning');
+
+    if ($('#txtEmail').val() != $('#txtConfirmarEmail').val()) {
         $('#txtEmail').parent().parent().addClass('has-warning');
+        $('#txtConfirmarEmail').parent().parent().addClass('has-warning');
         if (formularioValido)
             $('#txtEmail').focus();
         formularioValido = false;
-    } else
-        $('#txtEmail').parent().parent().removeClass('has-warning');
+        mostrarMsgAlerta('Emails não conferem!');
+    } else {
+        if ($('#txtEmail').val().trim() == '' || !IsValidEmail($('#txtEmail').val().trim())) {
+            $('#txtEmail').parent().parent().addClass('has-warning');
+            if (formularioValido)
+                $('#txtEmail').focus();
+            formularioValido = false;
+            
+            if ($('#txtEmail').val().trim() != '')
+                mostrarMsgAlerta('Email inválido!');
+        } else
+            $('#txtEmail').parent().parent().removeClass('has-warning');
+
+        if ($('#txtConfirmarEmail').val().trim() == '' || !IsValidEmail($('#txtConfirmarEmail').val().trim())) {
+            $('#txtConfirmarEmail').parent().parent().addClass('has-warning');
+            if (formularioValido)
+                $('#txtConfirmarEmail').focus();
+            formularioValido = false;
+            
+            if ($('#txtEmail').val().trim() != '')
+                mostrarMsgAlerta('Email inválido!');
+        } else
+            $('#txtConfirmarEmail').parent().parent().removeClass('has-warning');
+    }
 
     if ($('#txtSenha1').val() != $('#txtSenha2').val()) {
         $('#txtSenha1').parent().parent().addClass('has-warning');
@@ -68,6 +105,7 @@ function validarCadastro() {
         if (formularioValido)
             $('#txtSenha1').focus();
         formularioValido = false;
+        mostrarMsgAlerta('Senhas não conferem!');
     } else {
         if ($('#txtSenha1').val().trim() == '') {
             $('#txtSenha1').parent().parent().addClass('has-warning');
@@ -88,14 +126,11 @@ function validarCadastro() {
 
     if ($('#txtPerguntaSecreta').val().trim() == '') {
         $('#txtPerguntaSecreta').parent().parent().parent().addClass('has-warning');
-        //$('#txtPerguntaSecreta').parent().find('div, .input-group-btn').addClass('has-warning');
         if (formularioValido)
             $('#txtPerguntaSecreta').focus();
         formularioValido = false;
-    } else {
+    } else
         $('#txtPerguntaSecreta').parent().parent().parent().removeClass('has-warning');
-        //$('#txtPerguntaSecreta').parent().find('div, .input-group-btn').removeClass('has-warning');
-    }
 
     if ($('#txtRespostaSecreta').val().trim() == '') {
         $('#txtRespostaSecreta').parent().parent().addClass('has-warning');
@@ -113,12 +148,13 @@ function cadastrar() {
         return;
 
     $.ajax({
-        url: "http://spotanywhere.azurewebsites.net/api/UsuarioApi/Cadastrar",
+        url: window.location.origin + "/api/UsuarioApi/Cadastrar",
         type: "POST",
         contentType: "application/x-www-form-urlencoded; charset=UTF-8",
         crossDomain: true,
         data: {
             DsNome: $('#txtNome').val(),
+            NrCpf: ParseRemoveFormatRgCpf($('#txtCpf').val()),
             DsEmail: $('#txtEmail').val(),
             DsSenha: $('#txtSenha1').val(),
             DsPerguntaSecreta: $('#txtPerguntaSecreta').val(),
@@ -139,7 +175,8 @@ function cadastrar() {
                 mostrarMsgAlerta(data.DsOutput, data.DsMessage);
         },
         error: function (xmlHttpRequest) {
-            mostrarMsgErro(eval("(" + xmlHttpRequest.responseText + ")").Message);
+            var erro = eval("(" + xmlHttpRequest.responseText + ")");
+            mostrarMsgErro(ParseIsNullOrEmpty(erro) ? 'Erro!' : erro.Message);
         }
     });
 }
@@ -170,7 +207,7 @@ function fazerLogin() {
         return;
 
     $.ajax({
-        url: "http://spotanywhere.azurewebsites.net/api/UsuarioApi/Autenticar",
+        url: window.location.origin + "/api/UsuarioApi/Autenticar",
         type: "POST",
         contentType: "application/x-www-form-urlencoded; charset=UTF-8",
         crossDomain: true,
@@ -184,13 +221,13 @@ function fazerLogin() {
         dataType: "json",
         success: function (data) {
             if (data.TpOutput == 10)
-                //$(location).attr('href', window.location.origin + '/Main/Index');
-                $(location).attr('href', 'http://192.158.1.1:3000/logins/libera');
+                $(location).attr('href', window.location.origin + '/Main/Index');
             else
                 mostrarMsgAlerta(data.DsOutput, data.DsMessage);
         },
         error: function (xmlHttpRequest) {
-            mostrarMsgErro(eval("(" + xmlHttpRequest.responseText + ")").Message);
+            var erro = eval("(" + xmlHttpRequest.responseText + ")");
+            mostrarMsgErro(ParseIsNullOrEmpty(erro) ? 'Erro!' : erro.Message);
         }
     });
 }
@@ -243,7 +280,8 @@ function obterPerguntaSecreta() {
         },
         error: function (xmlHttpRequest) {
             $('#lblPerguntaSecretaAVerificar').text('');
-            mostrarMsgErro(eval("(" + xmlHttpRequest.responseText + ")").Message);
+            var erro = eval("(" + xmlHttpRequest.responseText + ")");
+            mostrarMsgErro(ParseIsNullOrEmpty(erro) ? 'Erro!' : erro.Message);
         }
     });
 }
@@ -332,7 +370,8 @@ function alterarSenha() {
                 mostrarMsgAlerta(data.DsOutput, data.DsMessage);
         },
         error: function (xmlHttpRequest) {
-            mostrarMsgErro(eval("(" + xmlHttpRequest.responseText + ")").Message);
+            var erro = eval("(" + xmlHttpRequest.responseText + ")");
+            mostrarMsgErro(ParseIsNullOrEmpty(erro) ? 'Erro!' : erro.Message);
         }
     });
 }
