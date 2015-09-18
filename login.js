@@ -1,11 +1,19 @@
 ﻿$(document).ready(function () {
     popularPerguntaSecreta();
+
     $("#btnSignup").click(function () { cadastrar(); });
     $("#btnLogin").click(function () { fazerLogin(); });
     $("#btnVerificarEmail").click(function () { obterPerguntaSecreta(); });
     $("#btnAlterarSenha").click(function () { alterarSenha(); });
     $("#txtLogin").on("keydown", function (e) { if ((e.keyCode ? e.keyCode : e.which) == '13') fazerLogin(); });
     $("#txtPassword").on("keydown", function (e) { if ((e.keyCode ? e.keyCode : e.which) == '13') fazerLogin(); });
+
+    //TODO:ARRUMAR KEY PRESS 13 PRA TODOS OS CAMPOS
+
+    $('#txtCpf').mask('999.999.999-99');
+    $('#txtDtNascimento').mask('99/99/9999');
+    $('#lnkTermosUso').click(function () { $('#msgTermoUso').css('max-height', $(window).height() * 0.7); $('#mdlExcluirUsuario').modal('toggle'); });
+    $('#btnLiConcordo').click(function () { $('#chkTermo').prop("checked", true); });
 });
 
 function popularPerguntaSecreta() {
@@ -50,23 +58,41 @@ function limparCadastro() {
 function validarCadastro() {
     var formularioValido = true;
 
-    if ($('#txtNome').val().trim() == '') {
-        formularioValido = false;
-        $('#txtNome').parent().parent().addClass('has-warning');
-        $('#txtNome').focus();
-    } else
-        $('#txtNome').parent().parent().removeClass('has-warning');
-
     if ($('#txtCpf').val().trim() == '' || !validarCpf($('#txtCpf').val().trim())) {
         $('#txtCpf').parent().parent().addClass('has-warning');
-        if (formularioValido)
-            $('#txtCpf').focus();
+        $('#txtCpf').focus();
         formularioValido = false;
-
         if ($('#txtCpf').val().trim() != '')
             mostrarMsgAlerta('Cpf inválido!');
     } else
         $('#txtCpf').parent().parent().removeClass('has-warning');
+
+    if ($('#txtNome').val().trim() == '') {
+        $('#txtNome').parent().parent().addClass('has-warning');
+        if (formularioValido)
+            $('#txtNome').focus();
+        formularioValido = false;
+    } else
+        $('#txtNome').parent().parent().removeClass('has-warning');
+
+    if ($('#txtDtNascimento').val().trim() == '' || !validarData($('#txtDtNascimento').val().trim())) {
+        $('#txtDtNascimento').parent().parent().addClass('has-warning');
+        if (formularioValido)
+            $('#txtDtNascimento').focus();
+        formularioValido = false;
+
+        if ($('#txtDtNascimento').val().trim() != '')
+            mostrarMsgAlerta('Data inválida!');
+    } else
+        $('#txtDtNascimento').parent().parent().removeClass('has-warning');
+
+    if (!$('#optMasculino').is(':checked') && !$('#optFeminino').is(':checked')) {
+        $('#optMasculino').parent().parent().parent().addClass('has-warning');
+        if (formularioValido)
+            $('#optMasculino').focus();
+        formularioValido = false;
+    } else
+        $('#optMasculino').parent().parent().parent().removeClass('has-warning');
 
     if ($('#txtEmail').val() != $('#txtConfirmarEmail').val()) {
         $('#txtEmail').parent().parent().addClass('has-warning');
@@ -81,7 +107,7 @@ function validarCadastro() {
             if (formularioValido)
                 $('#txtEmail').focus();
             formularioValido = false;
-            
+
             if ($('#txtEmail').val().trim() != '')
                 mostrarMsgAlerta('Email inválido!');
         } else
@@ -92,7 +118,7 @@ function validarCadastro() {
             if (formularioValido)
                 $('#txtConfirmarEmail').focus();
             formularioValido = false;
-            
+
             if ($('#txtEmail').val().trim() != '')
                 mostrarMsgAlerta('Email inválido!');
         } else
@@ -126,11 +152,14 @@ function validarCadastro() {
 
     if ($('#txtPerguntaSecreta').val().trim() == '') {
         $('#txtPerguntaSecreta').parent().parent().parent().addClass('has-warning');
+        $('#txtPerguntaSecreta').parent().find('div button').css('border-color', '#8a6d3b');
         if (formularioValido)
             $('#txtPerguntaSecreta').focus();
         formularioValido = false;
-    } else
+    } else {
         $('#txtPerguntaSecreta').parent().parent().parent().removeClass('has-warning');
+        $('#txtPerguntaSecreta').parent().find('div button').css('border-color', '#ccc');
+    }
 
     if ($('#txtRespostaSecreta').val().trim() == '') {
         $('#txtRespostaSecreta').parent().parent().addClass('has-warning');
@@ -139,6 +168,14 @@ function validarCadastro() {
         formularioValido = false;
     } else
         $('#txtRespostaSecreta').parent().parent().removeClass('has-warning');
+
+    if (!$('#chkTermo').is(':checked')) {
+        $('#chkTermo').parent().css('color', '#8a6d3b').css('font-weight', 'bold');
+        if (formularioValido)
+            $('#chkTermo').focus();
+        formularioValido = false;
+    } else
+        $('#chkTermo').parent().css('color', '#333').css('font-weight', 'normal');
 
     return formularioValido;
 }
@@ -153,12 +190,15 @@ function cadastrar() {
         contentType: "application/x-www-form-urlencoded; charset=UTF-8",
         crossDomain: true,
         data: {
-            DsNome: $('#txtNome').val(),
             NrCpf: ParseRemoveFormatRgCpf($('#txtCpf').val()),
+            DsNome: $('#txtNome').val(),
+            DtNascimento: replaceAll($('#txtDtNascimento').val(), '/', ''),
+            Sexo: $('#optMasculino').is(':checked') ? 'M' : ($('#optFeminino').is(':checked') ? 'F' : ''),
             DsEmail: $('#txtEmail').val(),
             DsSenha: $('#txtSenha1').val(),
             DsPerguntaSecreta: $('#txtPerguntaSecreta').val(),
             DsRespostaSecreta: $('#txtRespostaSecreta').val(),
+            ReceberPublicidade: $('#chkPromocao').is(':checked') ? true : false,
             DsToken: "A2477428889E9DBABCB8C2B5E6FBE3EC",
             TpTransacao: 1
         },
@@ -221,7 +261,7 @@ function fazerLogin() {
         dataType: "json",
         success: function (data) {
             if (data.TpOutput == 10)
-		$(location).attr('href', 'http://192.158.1.1:3000/logins/libera');
+                $(location).attr('href', window.location.origin + '/Main/Index');
             else
                 mostrarMsgAlerta(data.DsOutput, data.DsMessage);
         },
@@ -257,7 +297,7 @@ function obterPerguntaSecreta() {
         return;
 
     $.ajax({
-        url: "http://spotanywhere.azurewebsites.net/api/UsuarioApi/ObterPerguntaSecreta",
+        url:  "http://spotanywhere.azurewebsites.net/api/UsuarioApi/ObterPerguntaSecreta",
         type: "POST",
         contentType: "application/x-www-form-urlencoded; charset=UTF-8",
         crossDomain: true,
@@ -377,7 +417,7 @@ function alterarSenha() {
 }
 
 function mostrarMsgAlerta(p, q) {
-    $('#erro-page-alert').removeClass('alert-success alert-info alert-danger').addClass('alert-warning').show().html('<p>' + p + '</p>' + (!$(q).ParseIsNullOrEmpty() ? ('<p>' + q) + '</p>' : ''));
+    $('#erro-page-alert').removeClass('alert-success alert-info alert-danger').addClass('alert-warning').show().html('<p>' + p + '</p>' + (!ParseIsNullOrEmpty(q) ? ('<p>' + q) + '</p>' : ''));
     fecharMsg();
 }
 
