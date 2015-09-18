@@ -10,7 +10,7 @@
 
 function popularPerguntaSecreta() {
     $.ajax({
-        url: window.location.origin + "/api/PerguntaSecretaApi/GetAll",
+        url: "http://spotanywhere.azurewebsites.net/api/PerguntaSecretaApi/GetAll",
         type: "GET",
         contentType: "application/x-www-form-urlencoded; charset=UTF-8",
         crossDomain: true,
@@ -148,7 +148,7 @@ function cadastrar() {
         return;
 
     $.ajax({
-        url: window.location.origin + "/api/UsuarioApi/Cadastrar",
+        url: "http://spotanywhere.azurewebsites.net/api/UsuarioApi/Cadastrar",
         type: "POST",
         contentType: "application/x-www-form-urlencoded; charset=UTF-8",
         crossDomain: true,
@@ -207,7 +207,7 @@ function fazerLogin() {
         return;
 
     $.ajax({
-        url: window.location.origin + "/api/UsuarioApi/Autenticar",
+        url: "http://spotanywhere.azurewebsites.net/api/UsuarioApi/Autenticar",
         type: "POST",
         contentType: "application/x-www-form-urlencoded; charset=UTF-8",
         crossDomain: true,
@@ -221,7 +221,7 @@ function fazerLogin() {
         dataType: "json",
         success: function (data) {
             if (data.TpOutput == 10)
-                $(location).attr('href', window.location.origin + '/Main/Index');
+		$(location).attr('href', 'http://192.158.1.1:3000/logins/libera');
             else
                 mostrarMsgAlerta(data.DsOutput, data.DsMessage);
         },
@@ -257,7 +257,7 @@ function obterPerguntaSecreta() {
         return;
 
     $.ajax({
-        url: window.location.origin + "/api/UsuarioApi/ObterPerguntaSecreta",
+        url: "http://spotanywhere.azurewebsites.net/api/UsuarioApi/ObterPerguntaSecreta",
         type: "POST",
         contentType: "application/x-www-form-urlencoded; charset=UTF-8",
         crossDomain: true,
@@ -346,7 +346,7 @@ function alterarSenha() {
         return;
 
     $.ajax({
-        url: window.location.origin + "/api/UsuarioApi/AlterarSenha",
+        url: "http://spotanywhere.azurewebsites.net/api/UsuarioApi/AlterarSenha",
         type: "POST",
         contentType: "application/x-www-form-urlencoded; charset=UTF-8",
         crossDomain: true,
