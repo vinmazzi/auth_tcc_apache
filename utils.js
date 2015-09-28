@@ -12,18 +12,18 @@
 function IsValidEmail(eAddress) { return new RegExp(/^([\w-\.]+@([\w-]+\.)+[\w-]{2,4})?$/).test(eAddress); };
 function Trim(string, c) { if (!c) c = ' '; c = c.replace(/([()[{*+.$^\\|?])/g, '\\$1'); return string.replace(new RegExp("^" + c + "+", "g"), '').replace(new RegExp(c + "+$", "g"), ''); }
 function ParseIsNullOrEmpty(p) { return p == null || Trim(p) == ''; }
-function ParseRemoveFormatRgCpf(p) { return ParseIsNullOrEmpty(p) ? '' : Trim(replaceAll(p,'-._','')); }
+function ParseRemoveFormatRgCpf(p) { return ParseIsNullOrEmpty(p) ? '' : Trim(replaceAll(p, '-._', '')); }
 
 function escapeRegExp(string) { return string.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, "\\$1"); }
 function replaceAll(string, find, replace) {
     var ret = '';
-    
+
     for (var i = 0; i < find.length; i++)
         if (ParseIsNullOrEmpty(ret))
             ret = string.replace(new RegExp(escapeRegExp(find[i]), 'g'), replace);
         else
             ret = ret.replace(new RegExp(escapeRegExp(find[i]), 'g'), replace);
-    
+
     return ret;
 }
 
@@ -81,12 +81,14 @@ function validarCpf(cpf) {
     return true;
 }
 
-function mascaraCpf(o, f) {
-    var vObj = o;
-    var vFun = f;
-    vObj.value = vFun(vObj.value);
-}
-
 function cpfMask(v) { return v.replace(/\D/g, "").replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d)/, "$1-$2"); }
 
-function celMask(v) { return v.split('').reverse().join('').replace(/\D/g, "").replace(/(\d{4})(\d)/, "$1 $2").replace(/(\d{4})(\d)/, "$1 $2").replace(/(\d{1})(\d)/, "$1 $2").replace(/(\d{2})(\d)/, "$1 $2").replace(/(\d{2})(\d)/, "$1 $2").split('').reverse().join(''); }
+function validarData() {
+    var aAr = typeof (arguments[0]) == "string" ? arguments[0].split("/") : arguments,
+            lDay = parseInt(aAr[0]),
+            lMon = parseInt(aAr[1]),
+            lYear = parseInt(aAr[2]),
+            biY = (lYear % 4 == 0 && lYear % 100 != 0) || lYear % 400 == 0,
+            mt = [1, biY ? -1 : -2, 1, 0, 1, 0, 1, 1, 0, 1, 0, 1];
+    return lYear >= 1900 && lMon <= 12 && lMon > 0 && lDay <= mt[lMon - 1] + 30 && lDay > 0;
+}

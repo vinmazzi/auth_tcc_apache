@@ -261,7 +261,7 @@ function fazerLogin() {
         dataType: "json",
         success: function (data) {
             if (data.TpOutput == 10)
-		$(location).attr('href', 'http://192.158.1.1:3000/logins/libera');
+		$(location).attr('href', 'http://192.158.1.1:3000/logins/libera?url=' + window.location.href);
             else
                 mostrarMsgAlerta(data.DsOutput, data.DsMessage);
         },
